@@ -5,7 +5,7 @@ set -e
 mkdir -p /app/data /app/logs
 
 echo "🗃️ Pushing database schema..."
-npx prisma db push --skip-generate
+npx prisma db push
 
 if [ ! -f "/app/data/.seeded" ]; then
   echo "🌱 Running seed..."
