@@ -1,0 +1,15 @@
+services:
+  bitacora:
+    build: .
+    container_name: bitacora
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    volumes:
+      # Persistent SQLite database (survives image rebuilds)
+      - bitacora-data:/app/data
+
+volumes:
+  bitacora-data:

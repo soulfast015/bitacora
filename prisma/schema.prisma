@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  tickets   Ticket[] @relation("AssignedTickets")
+  createdTickets Ticket[] @relation("CreatedTickets")
+  receivedTickets Ticket[] @relation("ReceivedTickets")
+  comments  TicketComment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+}
+
+model Permission {
+  id     String @id @default(cuid())
+  name   String @unique
+  roles  Role[]
+}
+
+model Ticket {
+  id                String   @id @default(cuid())
+  ticketNumber      Int      @unique
+  title             String
+  applicativo       String
+  solucion          String?
+  localidad         String
+  usuarioAfectado   String
+  status            String   @default("proceso")
+  priority          String   @default("media")
+  slaHours          Int      @default(24)
+  resolvedAt        DateTime?
+  assignedTo        String?
+  assignee          User?    @relation("AssignedTickets", fields: [assignedTo], references: [id])
+  recibidoPor       String?
+  receiver          User?    @relation("ReceivedTickets", fields: [recibidoPor], references: [id])
+  createdBy         String
+  creator           User     @relation("CreatedTickets", fields: [createdBy], references: [id])
+  comments          TicketComment[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model TicketComment {
+  id        String   @id @default(cuid())
+  content   String
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}

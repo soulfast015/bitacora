@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+*.db
+logs
+.env
+.env.*
+!.env.production.example
+.DS_Store
+README.md
+DEPLOY.md
+CLAUDE.md
+AGENTS.md
