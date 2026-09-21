@@ -1,74 +1,52 @@
 #!/bin/bash
 # ==============================================
-# Script de deploy para AAPanel (MySQL)
+# Script de deploy con Docker (contenedor único + SQLite)
+# Pensado para un LXC de Proxmox. Ejecutar dentro del contenedor:
+#   bash deploy.sh
 # ==============================================
-# Ejecutar en el servidor después de subir los archivos
-# bash deploy.sh
 
 set -e
 
-echo "🚀 Iniciando deploy de Bitácora..."
+echo "🚀 Iniciando deploy de Bitácora (Docker)..."
 
-APP_DIR="/www/wwwroot/bitacora"
-cd "$APP_DIR"
-
-# 1. Crear carpetas necesarias
-echo "📁 Creando carpetas..."
-mkdir -p logs
-
-# 2. Cargar variables de entorno
-if [ -f .env.production ]; then
-  export $(grep -v '^#' .env.production | xargs)
-  echo "✅ Variables de entorno cargadas"
-else
-  echo "❌ ERROR: No se encontró .env.production"
+# 1. Verificar Docker
+if ! command -v docker >/dev/null 2>&1; then
+  echo "❌ ERROR: Docker no está instalado."
+  echo "   Instálalo con: curl -fsSL https://get.docker.com | sh"
   exit 1
 fi
 
-# 3. Instalar dependencias
-echo "📦 Instalando dependencias..."
-npm install
-
-# 4. Generar Prisma Client
-echo "🔧 Generando Prisma Client..."
-npx prisma generate
-
-# 5. Crear tablas en MySQL
-echo "🗃️  Configurando base de datos MySQL..."
-npx prisma db push
-
-# 6. Ejecutar seed (solo la primera vez)
-if [ ! -f "logs/.seeded" ]; then
-  echo "🌱 Ejecutando seed inicial..."
-  npx tsx prisma/seed.ts
-  touch logs/.seeded
-  echo "✅ Seed completado"
-else
-  echo "⏭️  Seed ya ejecutado anteriormente"
+if ! docker compose version >/dev/null 2>&1; then
+  echo "❌ ERROR: El plugin 'docker compose' no está disponible."
+  exit 1
 fi
 
-# 7. Build de producción
-echo "🏗️  Construyendo aplicación..."
-npm run build
-
-# 8. Copiar archivos estáticos para standalone
-echo "📂 Preparando standalone..."
-cp -r public .next/standalone/ 2>/dev/null || true
-cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
-cp .env.production .next/standalone/ 2>/dev/null || true
-
-# 9. Reiniciar con PM2
-echo "🔄 Reiniciando aplicación..."
-if pm2 describe bitacora > /dev/null 2>&1; then
-  pm2 restart bitacora
-else
-  pm2 start ecosystem.config.cjs
+# 2. Verificar variables de entorno
+if [ ! -f .env.production ]; then
+  echo "⚠️  No se encontró .env.production. Creándolo desde el ejemplo..."
+  cp env.production.example .env.production
+  echo ""
+  echo "❗ Edita .env.production y ajusta NEXTAUTH_SECRET y NEXTAUTH_URL antes de continuar."
+  echo "   Genera un secret con: openssl rand -base64 32"
+  exit 1
 fi
 
-pm2 save
+# 3. Construir y levantar (app + SQLite en volumen persistente)
+echo "🏗️  Construyendo imagen y levantando contenedor..."
+docker compose up -d --build
+
+# El entrypoint del contenedor ejecuta automáticamente:
+#   - prisma db push  (crea las tablas en el SQLite del volumen)
+#   - seed            (usuarios/roles iniciales, solo la primera vez)
+#   - node server.js  (servidor Next.js en el puerto 3000)
 
 echo ""
-echo "✅ Deploy completado exitosamente!"
-echo "📍 La aplicación está corriendo en el puerto 3000"
-echo "🌐 Configura Apache como reverse proxy apuntando a localhost:3000"
+echo "✅ Deploy completado."
+echo "📍 La app corre en el puerto 3000 (path /bitacora)."
+echo "🌐 Accede en: http://IP-DEL-LXC:3000/bitacora"
+echo ""
+echo "Comandos útiles:"
+echo "  docker compose logs -f      # ver logs"
+echo "  docker compose ps           # estado"
+echo "  docker compose restart      # reiniciar"
 echo ""
