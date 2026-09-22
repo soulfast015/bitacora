@@ -76,7 +76,8 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-11"
+                  className="input-field"
+                  style={{ paddingLeft: "2.75rem" }}
                   placeholder="correo@ejemplo.com"
                   required
                 />
@@ -93,7 +94,8 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-11"
+                  className="input-field"
+                  style={{ paddingLeft: "2.75rem" }}
                   placeholder="••••••••"
                   required
                 />
@@ -108,15 +110,6 @@ export default function LoginPage() {
               {loading ? "Ingresando..." : "Ingresar"}
             </button>
           </form>
-
-          <div className="vintage-divider" />
-
-          <div className="text-center text-sm text-muted">
-            <p>Usuarios de prueba:</p>
-            <p className="mt-1"><strong>Admin:</strong> admin@bitacora.com / admin123</p>
-            <p><strong>Técnico:</strong> tecnico@bitacora.com / tecnico123</p>
-            <p><strong>Usuario:</strong> usuario@bitacora.com / usuario123</p>
-          </div>
         </div>
       </div>
     </div>
