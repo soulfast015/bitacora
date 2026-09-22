@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
       options: {
         httpOnly: true,
         sameSite: "lax",
-        path: "/bitacora",
+        path: "/",
         secure: false,
       },
     },

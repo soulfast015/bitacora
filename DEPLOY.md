@@ -83,7 +83,7 @@ Edita `.env.production`:
 ```env
 DATABASE_URL="file:/app/data/prod.db"
 NEXTAUTH_SECRET="PEGAR-SECRET-GENERADO-AQUI"
-NEXTAUTH_URL="http://IP-DEL-LXC:3000/bitacora"
+NEXTAUTH_URL="http://IP-DEL-LXC:3000"
 ```
 
 - **No cambies `DATABASE_URL`**: apunta al volumen persistente dentro del contenedor.
@@ -91,7 +91,7 @@ NEXTAUTH_URL="http://IP-DEL-LXC:3000/bitacora"
   ```bash
   openssl rand -base64 32
   ```
-- Pon en `NEXTAUTH_URL` la **IP real del LXC** (mírala con `ip a`) e incluye `/bitacora`.
+- Pon en `NEXTAUTH_URL` la **IP real del LXC** (mírala con `ip a`), sin ningún path extra.
 
 ---
 
@@ -118,9 +118,9 @@ docker compose logs -f
 
 Abre en el navegador:
 ```
-http://IP-DEL-LXC:3000/bitacora
+http://IP-DEL-LXC:3000
 ```
-(la app vive bajo el path `/bitacora`).
+(el login está en `/login`).
 
 ### Credenciales por defecto
 
@@ -139,8 +139,8 @@ http://IP-DEL-LXC:3000/bitacora
 Si quieres exponerlo con dominio y HTTPS, pon un Nginx delante (en el mismo LXC u otro):
 
 ```nginx
-location /bitacora/ {
-    proxy_pass http://127.0.0.1:3000/bitacora/;
+location / {
+    proxy_pass http://127.0.0.1:3000/;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -149,7 +149,7 @@ location /bitacora/ {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
-Y actualiza `NEXTAUTH_URL` al dominio (p. ej. `https://tudominio.com/bitacora`), luego
+Y actualiza `NEXTAUTH_URL` al dominio (p. ej. `https://tudominio.com`), luego
 `docker compose up -d` para recargar.
 
 ---
@@ -203,7 +203,7 @@ docker compose down -v         # detener y BORRAR los datos (¡cuidado!)
 | Problema | Solución |
 |----------|----------|
 | Docker no arranca en el LXC | Falta `nesting=1` en el CT. Añádelo en Options → Features y reinicia el LXC. |
-| Login no funciona / redirige mal | Revisa que `NEXTAUTH_URL` tenga la IP/dominio correctos **y** `/bitacora`. |
+| Login no funciona / redirige mal | Revisa que `NEXTAUTH_URL` tenga la IP/dominio correctos (sin path extra). |
 | No abre desde otra máquina | Verifica firewall del LXC y que el puerto 3000 esté publicado (`docker compose ps`). |
 | Se borraron los datos | Solo pasa con `docker compose down -v`. Restaura desde backup. |
 | Quiero reseeded desde cero | `docker compose down -v && docker compose up -d --build`. |
