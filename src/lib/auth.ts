@@ -15,14 +15,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const identifier = credentials.email.toLowerCase();
+        const identifier = credentials.email.trim().toLowerCase();
         const rateCheck = checkRateLimit(identifier);
         if (!rateCheck.allowed) {
           throw new Error(`Demasiados intentos. Intenta en ${rateCheck.blockedFor} segundos.`);
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: identifier },
           include: { role: { include: { permissions: true } } },
         });
 

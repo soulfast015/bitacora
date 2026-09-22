@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Todos los campos son requeridos" }, { status: 400 });
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existing) {
     return Response.json({ error: "El email ya está registrado" }, { status: 409 });
   }
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
-    data: { email, name, password: hashedPassword, roleId },
+    data: { email: normalizedEmail, name, password: hashedPassword, roleId },
     select: {
       id: true,
       email: true,
